@@ -1,6 +1,6 @@
 TOP_MOD = test_cordic
 VERILATOR = $(VERILATOR_ROOT)/bin/verilator
-SRC = src/cordic.sv
+SRC = src/cordic.sv src/ROM.sv
 V_FLAGS = --binary --Wno-fatal --trace --timing --top-module $(TOP_MOD)
 
 all:
