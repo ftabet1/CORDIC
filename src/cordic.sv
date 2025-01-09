@@ -1,3 +1,5 @@
+
+
 module cordic(
     input logic          clk,
     input logic          reset,
@@ -87,12 +89,20 @@ module cordic(
 
 endmodule
 
+function real norm(real v0, real v1);
+    return $sqrt(v0*v0+v1*v1);
+endfunction
+
+function real dot(real v0_0, real v1_0, real v0_1, real v1_1);
+    return v0_0 * v0_1 + v1_0 * v1_1;
+endfunction
+
 module test_cordic();
 
     logic[15:0] v0_i = 0;
     logic[15:0] v1_i = 0;
-    logic[15:0] v0_o;
-    logic[15:0] v1_o;
+    logic signed[15:0] v0_o;
+    logic signed[15:0] v1_o;
 
     logic ready;
     logic start = 0;
@@ -111,30 +121,52 @@ module test_cordic();
         .v1_o(v1_o)
     );
 
+    logic signed[15:0] v0_i_val[0:4] = {16'h0, 16'h80, 16'hFEFF, 16'h1234, 16'h80};
+    logic signed[15:0] v1_i_val[0:4] = {16'h80, 16'h0, 16'h0180, 16'h3210, 16'h180};
+    real pi = 3.14;
+    real v0_real = 0;
+    real v1_real = 0;
+    real v0_real_a = 0;
+    real v1_real_a = 0;
+    real X_axis[0:1] = {1.0, 0.0};
+    real v_norm_p = 0;
+    real v_norm_a = 0;
+    real v_rad_p  = 0;
+    real v_rad_a  = 0;
+
 	initial begin
 		$dumpfile("test_cordic.wcd");
 		$dumpvars(1, test_cordic);
         reset = 1;
-        v0_i = 0;
-        v1_i = 16'h80;
         #2
         reset = 0;
-        start = 1;
-        #2
-        start = 0;
-        #30
-        v0_i = 16'h80;
-        v1_i = 0;
-        start = 1;
-        #2
-        start = 0;
-        #30
-        v0_i = 16'hFEFF;
-        v1_i = 16'h0180;
-        start = 1;
-        #2
-        start = 0;
-        #30
+        for(integer i = 0; i < 5; i++) begin
+            v0_real = v0_i_val[i];
+            v1_real = v1_i_val[i];
+            v0_real = v0_real / (1 << 7);
+            v1_real = v1_real / (1 << 7);
+            v_norm_p = norm(v0_real, v1_real);
+            v_rad_p = $acos(dot(v0_real, v1_real, X_axis[0], X_axis[1])/(norm(v0_real, v1_real) * norm(X_axis[0], X_axis[1])));
+            $display("----------VECTOR %d: [%f, %f]----------\n", i, v0_real, v1_real);
+            v0_i = v0_i_val[i];
+            v1_i = v1_i_val[i];
+            start = 1;
+            #4
+            start = 0;
+            while(!ready) #2;
+            v0_real_a = v0_o;
+            v1_real_a = v1_o;
+            v0_real_a = v0_real_a / (1 << 7);
+            v1_real_a = v1_real_a / (1 << 7);
+
+            v_norm_a = norm(v0_real_a, v1_real_a);
+            v_rad_a = $acos(dot(v0_real_a, v1_real_a, X_axis[0], X_axis[1])/(norm(v0_real_a, v1_real_a) * norm(X_axis[0], X_axis[1])));
+            #2
+            $display("BEFORE: RAD = %f; NORM = %f\n", v_rad_p, v_norm_p);
+            $display("AFTER: RAD = %f; NORM = %f\n", v_rad_a, v_norm_a);
+            $display("DIFF: RAD = %f; NORM = %f\n", v_rad_a-v_rad_p, v_norm_a-v_norm_p);
+            
+        end
 		$finish;
 	end
 endmodule
