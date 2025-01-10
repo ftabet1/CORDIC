@@ -16,7 +16,7 @@ module cordic(
     localparam P_STATE_SCALE    = 2;
     localparam signed[15:0] ANGLE = 16'h562B; //1.3464 rad; 77.143 ang        Q=14
     localparam signed[15:0] SCALE = 16'h4D  ; //0.6073;                       Q8.7
-
+ 
     logic[1:0]  state       = P_STATE_IDLE;
     logic[3:0]  cnt         = 0;
 
@@ -30,13 +30,15 @@ module cordic(
     logic signed[31:0]  scale_mul;
 
     logic[15:0] rom_ang_data;
-    logic[2:0]  rom_ang_addr = cnt[2:0];
+    logic[2:0]  rom_ang_addr;
 
     ROM #(16, 8, 3, "angle_table.hex") ROM_ANG_i (
         .i_oe(1),
         .i_addr(rom_ang_addr),
         .o_data(rom_ang_data)
     );
+
+    assign rom_ang_addr =  cnt[2:0];
 
     always_comb begin
         v0_data_add = rot_acc[15] ? v0_data + (v1_data >>> cnt) : v0_data - (v1_data >>> cnt);
@@ -122,7 +124,7 @@ module test_cordic();
     );
 
     logic signed[15:0] v0_i_val[0:4] = {16'h0, 16'h80, 16'hFEFF, 16'h1234, 16'h80};
-    logic signed[15:0] v1_i_val[0:4] = {16'h80, 16'h0, 16'h0180, 16'h3210, 16'h180};
+    logic signed[15:0] v1_i_val[0:4] = {16'h80, 16'h0, 16'h0180, 16'h3210, 16'hEFF0};
     real pi = 3.14;
     real v0_real = 0;
     real v1_real = 0;
