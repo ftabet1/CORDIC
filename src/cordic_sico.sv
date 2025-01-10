@@ -51,7 +51,7 @@ module cordic_sico(
     end
 
     assign scale_mul_norm = scale_mul[22:7]; 
-    assign = rom_ang_addr = cnt[2:0];
+    assign rom_ang_addr = cnt[2:0];
 
     always_ff@(posedge(clk)) begin
         if(reset) begin
@@ -167,8 +167,8 @@ module test_cordic_sico();
         reset = 1;
         #2
         reset = 0;
-        for(integer i = 0; i < 150; i++) begin
-            angle = angle + 16'hA2;
+        for(integer i = 0; i < 450; i++) begin
+            angle = angle + 16'h62;
             v0_real = v0_i_val[0];
             v1_real = v1_i_val[0];
             v0_i_val[0] = v_new[0];
